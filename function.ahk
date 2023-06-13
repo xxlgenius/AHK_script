@@ -1,24 +1,10 @@
 ;实现自定义函数和维护全局变量
 
 #SingleInstance Force
-#Include AHK_ClipFunc\Gdip_All.ahk
 
 ;=====================================================================o
 ;                         全局变量                                     |
 ;=====================================================================o
-
-;windows的临时文件路径，如果跨平台需要写个环境判断
-tempFile := Format("{1}\AHKTMP",A_AppData)
-
-;#Include, Gdip_All.ahk
-; 压缩剪贴版图片
-
-OnClipboardChange("ClipChanged")
-
-# Persistent
-ClipChanged(Type) {
-clip_type := Type
-}
 
 ;=====================================================================o
 ;                         全局函数                                     |
