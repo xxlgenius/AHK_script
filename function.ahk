@@ -4,6 +4,24 @@
 ;                         全局变量                                     |
 ;=====================================================================o
 
+;windows的临时文件路径，如果跨平台需要写个环境判断
+tempFile := Format("{1}\AHKTMP",A_AppData)
+
+#SingleInstance Force
+global   DEFAULT_IMAGE_FOLDER := "D:\Data\Programs\UserData\AutoHotkey\tempImages"
+global  DEFAULT_LOG_FOLDER := "D:\Data\Programs\UserData\AutoHotkey\tempImages"
+global local_img
+global clip_type
+;#Include, Gdip_All.ahk
+; 压缩剪贴版图片
+
+OnClipboardChange("ClipChanged")
+
+# Persistent
+ClipChanged(Type) {
+clip_type := Type
+}
+
 ;=====================================================================o
 ;                         全局函数                                     |
 ;=====================================================================o
