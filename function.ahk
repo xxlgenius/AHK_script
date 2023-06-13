@@ -1,5 +1,7 @@
 ;实现自定义函数和维护全局变量
 
+#SingleInstance Force
+
 ;=====================================================================o
 ;                         全局变量                                     |
 ;=====================================================================o
@@ -49,6 +51,11 @@ GetNewFilePath()
   NewDirName .= "/"
   NewDirName .= FormatTime(, "MMddHHmmss")
   return NewDirName
+}
+
+SaveImg()
+{
+  imgAlpha := Gdip_CreateBitmapFromClipboard()
 }
 
 ;后台执行单条CMD命令并取得返回值
