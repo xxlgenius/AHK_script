@@ -1,5 +1,8 @@
 ;实现自定义函数和维护全局变量
 
+#SingleInstance Force
+#Include AHK_ClipFunc\Gdip_All.ahk
+
 ;=====================================================================o
 ;                         全局变量                                     |
 ;=====================================================================o
@@ -7,11 +10,6 @@
 ;windows的临时文件路径，如果跨平台需要写个环境判断
 tempFile := Format("{1}\AHKTMP",A_AppData)
 
-#SingleInstance Force
-global   DEFAULT_IMAGE_FOLDER := "D:\Data\Programs\UserData\AutoHotkey\tempImages"
-global  DEFAULT_LOG_FOLDER := "D:\Data\Programs\UserData\AutoHotkey\tempImages"
-global local_img
-global clip_type
 ;#Include, Gdip_All.ahk
 ; 压缩剪贴版图片
 
@@ -67,6 +65,11 @@ GetNewFilePath()
   NewDirName .= "/"
   NewDirName .= FormatTime(, "MMddHHmmss")
   return NewDirName
+}
+
+SaveImg()
+{
+  imgAlpha := Gdip_CreateBitmapFromClipboard()
 }
 
 ;后台执行单条CMD命令并取得返回值
