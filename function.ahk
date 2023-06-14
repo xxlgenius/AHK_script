@@ -53,11 +53,6 @@ GetNewFilePath()
   return NewDirName
 }
 
-SaveImg()
-{
-  imgAlpha := Gdip_CreateBitmapFromClipboard()
-}
-
 ;后台执行单条CMD命令并取得返回值
 RunWaitOne(command) {
   shell := ComObject("WScript.Shell")
