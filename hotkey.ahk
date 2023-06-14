@@ -25,11 +25,25 @@
     FileAppend("", filePath)
 }
 
-;关闭显示器
-
+;关闭显示器,不要多次连续触发此快捷键，唤醒屏幕需要等一会
 #+l::
 {
-  Run("nircmd.exe monitor off")
+  static isMonitorOff := false
+  if isMonitorOff
+    {
+      ;使用monitor on命令时需要bios支持，所以使用sendkey命令唤醒兼容性更好
+      exitCode := RunWait("nircmd.exe sendkeypress ctrl")
+      if !exitCode 
+        ;异或操作实现切换bool值
+        isMonitorOff ^= true
+    }
+  else
+    {
+      exitCode := RunWait("nircmd.exe monitor off")
+      if !exitCode 
+        isMonitorOff ^= true
+    }
+  
 }
 
 ;=====================================================================o
