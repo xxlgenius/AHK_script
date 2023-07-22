@@ -233,7 +233,15 @@ OnChangeDesktop(wParam, lParam, msg, hwnd) {
 #8::GotoDesktopNumber(7)
 #9::GotoDesktopNumber(8)
 
-
+#+1::MoveCurrentWindowToDesktop(0)
+#+2::MoveCurrentWindowToDesktop(1)
+#+3::MoveCurrentWindowToDesktop(2)
+#+4::MoveCurrentWindowToDesktop(3)
+#+5::MoveCurrentWindowToDesktop(4)
+#+6::MoveCurrentWindowToDesktop(5)
+#+7::MoveCurrentWindowToDesktop(6)
+#+8::MoveCurrentWindowToDesktop(7)
+#+9::MoveCurrentWindowToDesktop(8)
 
 ;新建空白markdown文档
 ^+m::
