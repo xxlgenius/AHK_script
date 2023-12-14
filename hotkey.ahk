@@ -69,13 +69,15 @@ GetObjDir()
 }
 
 ;返回以日期命名的路径“C:\xxx\xxx\MMddHHmmss”没有后缀
-GetNewFilePath()
+GetDateFilePath()
 {
   NewDirName := GetObjDir()
   NewDirName .= "/"
   NewDirName .= FormatTime(, "MMddHHmmss")
   return NewDirName
 }
+
+
 
 ;后台执行单条CMD命令并取得返回值
 RunWaitOne(command) {
@@ -280,25 +282,17 @@ GotoDesktopNumberAndActivateWindow(newWindowsIndex) {
 #+9::MoveCurrentWindowToDesktop(8)
 #+0::MoveCurrentWindowToDesktop(9)
 
-;新建空白markdown文档
 ^+m::
 {
-    filePath := GetNewFilePath()
-    filePath .= ".md"
+  fileName := InputBox("输入文件名").value
+  currentPath := GetObjDir()
+  filePath := currentPath . "/" . fileName
+  if FileExist(filePath){
+    SetWindowsError("新建空白文件失败","当前文件名已存在")
+  }
+  else{
     FileAppend("", filePath)
-}
-;新建空白txt文档
-^+i::
-{
-    filePath := GetNewFilePath()
-    filePath .= ".txt"
-    FileAppend("", filePath)
-}
-;新建空白无后缀文件
-^+u::
-{
-    filePath := GetNewFilePath()
-    FileAppend("", filePath)
+  }
 }
 
 ;关闭显示器,不要多次连续触发此快捷键，唤醒屏幕需要等一会
