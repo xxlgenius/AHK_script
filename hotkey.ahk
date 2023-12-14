@@ -1,13 +1,38 @@
 ;实现自定义函数和维护全局变量
 
 ;=====================================================================o
-;                         全局变量                                     |
+;                         全局函数&变量                                     |
 ;=====================================================================o
 
+;全局变量并初始化
 
-;=====================================================================o
-;                         全局函数                                     |
-;=====================================================================o
+; 定长数组，记录所有桌面最后激活窗口的ID,数组长度为10，最多支持10个桌面
+global currentWindowsArray := [0,1,2,3,4,5,6,7,8,9,10]
+; 初始化数组，将所有元素置为0
+  
+; 虚拟桌面切换函数,win10与win11所用的DLL不同. win10中Name桌面的name获取异常，已经注释
+; AutoHotkey v2 script
+SetWorkingDir(A_ScriptDir)
+
+; Path to the DLL, relative to the script
+VDA_PATH := A_ScriptDir . "\VirtualDesktopAccessor.dll"
+hVirtualDesktopAccessor := DllCall("LoadLibrary", "Str", VDA_PATH, "Ptr")
+
+GetDesktopCountProc := DllCall("GetProcAddress", "Ptr", hVirtualDesktopAccessor, "AStr", "GetDesktopCount", "Ptr")
+GoToDesktopNumberProc := DllCall("GetProcAddress", "Ptr", hVirtualDesktopAccessor, "AStr", "GoToDesktopNumber", "Ptr")
+GetCurrentDesktopNumberProc := DllCall("GetProcAddress", "Ptr", hVirtualDesktopAccessor, "AStr", "GetCurrentDesktopNumber", "Ptr")
+IsWindowOnCurrentVirtualDesktopProc := DllCall("GetProcAddress", "Ptr", hVirtualDesktopAccessor, "AStr", "IsWindowOnCurrentVirtualDesktop", "Ptr")
+IsWindowOnDesktopNumberProc := DllCall("GetProcAddress", "Ptr", hVirtualDesktopAccessor, "AStr", "IsWindowOnDesktopNumber", "Ptr")
+MoveWindowToDesktopNumberProc := DllCall("GetProcAddress", "Ptr", hVirtualDesktopAccessor, "AStr", "MoveWindowToDesktopNumber", "Ptr")
+IsPinnedWindowProc := DllCall("GetProcAddress", "Ptr", hVirtualDesktopAccessor, "AStr", "IsPinnedWindow", "Ptr")
+GetDesktopNameProc := DllCall("GetProcAddress", "Ptr", hVirtualDesktopAccessor, "AStr", "GetDesktopName", "Ptr")
+SetDesktopNameProc := DllCall("GetProcAddress", "Ptr", hVirtualDesktopAccessor, "AStr", "SetDesktopName", "Ptr")
+CreateDesktopProc := DllCall("GetProcAddress", "Ptr", hVirtualDesktopAccessor, "AStr", "CreateDesktop", "Ptr")
+RemoveDesktopProc := DllCall("GetProcAddress", "Ptr", hVirtualDesktopAccessor, "AStr", "RemoveDesktop", "Ptr")
+
+; On change listeners
+RegisterPostMessageHookProc := DllCall("GetProcAddress", "Ptr", hVirtualDesktopAccessor, "AStr", "RegisterPostMessageHook", "Ptr")
+UnregisterPostMessageHookProc := DllCall("GetProcAddress", "Ptr", hVirtualDesktopAccessor, "AStr", "UnregisterPostMessageHook", "Ptr")
 
 ;获取资源管理器当前显示的路径
 GetObjDir()
@@ -95,31 +120,6 @@ SetWindowsError(title,infoMsg){
     ;SetTimer(TrayTip,time)
 }
 
-
-; 虚拟桌面切换函数,win10与win11所用的DLL不同. win10中Name桌面的name获取异常，已经注释
-; AutoHotkey v2 script
-SetWorkingDir(A_ScriptDir)
-
-; Path to the DLL, relative to the script
-VDA_PATH := A_ScriptDir . "\VirtualDesktopAccessor.dll"
-hVirtualDesktopAccessor := DllCall("LoadLibrary", "Str", VDA_PATH, "Ptr")
-
-GetDesktopCountProc := DllCall("GetProcAddress", "Ptr", hVirtualDesktopAccessor, "AStr", "GetDesktopCount", "Ptr")
-GoToDesktopNumberProc := DllCall("GetProcAddress", "Ptr", hVirtualDesktopAccessor, "AStr", "GoToDesktopNumber", "Ptr")
-GetCurrentDesktopNumberProc := DllCall("GetProcAddress", "Ptr", hVirtualDesktopAccessor, "AStr", "GetCurrentDesktopNumber", "Ptr")
-IsWindowOnCurrentVirtualDesktopProc := DllCall("GetProcAddress", "Ptr", hVirtualDesktopAccessor, "AStr", "IsWindowOnCurrentVirtualDesktop", "Ptr")
-IsWindowOnDesktopNumberProc := DllCall("GetProcAddress", "Ptr", hVirtualDesktopAccessor, "AStr", "IsWindowOnDesktopNumber", "Ptr")
-MoveWindowToDesktopNumberProc := DllCall("GetProcAddress", "Ptr", hVirtualDesktopAccessor, "AStr", "MoveWindowToDesktopNumber", "Ptr")
-IsPinnedWindowProc := DllCall("GetProcAddress", "Ptr", hVirtualDesktopAccessor, "AStr", "IsPinnedWindow", "Ptr")
-GetDesktopNameProc := DllCall("GetProcAddress", "Ptr", hVirtualDesktopAccessor, "AStr", "GetDesktopName", "Ptr")
-SetDesktopNameProc := DllCall("GetProcAddress", "Ptr", hVirtualDesktopAccessor, "AStr", "SetDesktopName", "Ptr")
-CreateDesktopProc := DllCall("GetProcAddress", "Ptr", hVirtualDesktopAccessor, "AStr", "CreateDesktop", "Ptr")
-RemoveDesktopProc := DllCall("GetProcAddress", "Ptr", hVirtualDesktopAccessor, "AStr", "RemoveDesktop", "Ptr")
-
-; On change listeners
-RegisterPostMessageHookProc := DllCall("GetProcAddress", "Ptr", hVirtualDesktopAccessor, "AStr", "RegisterPostMessageHook", "Ptr")
-UnregisterPostMessageHookProc := DllCall("GetProcAddress", "Ptr", hVirtualDesktopAccessor, "AStr", "UnregisterPostMessageHook", "Ptr")
-
 GetDesktopCount() {
     global GetDesktopCountProc
     count := DllCall(GetDesktopCountProc, "Int")
@@ -127,10 +127,26 @@ GetDesktopCount() {
 }
 
 MoveCurrentWindowToDesktop(number) {
-    global MoveWindowToDesktopNumberProc, GoToDesktopNumberProc
-    activeHwnd := WinGetID("A")
-    DllCall(MoveWindowToDesktopNumberProc, "Ptr", activeHwnd, "Int", number, "Int")
-    DllCall(GoToDesktopNumberProc, "Int", number, "Int")
+    if (WinExist("A")){
+      activeHwnd := WinGetID("A")
+      MoveWindowToDesktop(activeHwnd, number)
+      currentDesktopIndex := GetDesktopIndex()
+      ;当前激活窗口被转移，所以当前桌面的最后激活窗口ID置为0
+      currentWindowsArray[currentDesktopIndex + 1] := 0
+      ;直接切换桌面，不需要激活窗口
+      GoToDesktopNumber(number)
+    }
+}
+
+MoveWindowToDesktop(hwnd, number) {
+    global MoveWindowToDesktopNumberProc
+    DllCall(MoveWindowToDesktopNumberProc, "Ptr", hwnd, "Int", number, "Int")
+}
+
+GoToDesktopNumber(num) {
+  global GoToDesktopNumberProc
+  DllCall(GoToDesktopNumberProc, "Int", num, "Int")
+  return
 }
 
 GoToPrevDesktop() {
@@ -146,6 +162,7 @@ GoToPrevDesktop() {
     return
 }
 
+
 GoToNextDesktop() {
     global GetCurrentDesktopNumberProc, GoToDesktopNumberProc
     current := DllCall(GetCurrentDesktopNumberProc, "Int")
@@ -159,11 +176,7 @@ GoToNextDesktop() {
     return
 }
 
-GoToDesktopNumber(num) {
-    global GoToDesktopNumberProc
-    DllCall(GoToDesktopNumberProc, "Int", num, "Int")
-    return
-}
+
 MoveOrGotoDesktopNumber(num) {
     ; If user is holding down Mouse left button, move the current window also
     if (GetKeyState("LButton")) {
@@ -199,6 +212,11 @@ RemoveDesktop(remove_desktop_number, fallback_desktop_number) {
     return ran
 }
 
+GetDesktopIndex() {
+  current := DllCall(GetCurrentDesktopNumberProc, "Int")
+  return current
+}
+
 ; SetDesktopName(0, "It works! 🐱")
 
 DllCall(RegisterPostMessageHookProc, "Ptr", A_ScriptHwnd, "Int", 0x1400 + 30, "Int")
@@ -217,21 +235,47 @@ OnChangeDesktop(wParam, lParam, msg, hwnd) {
     ; TraySetIcon(".\Icons\icon" NewDesktop ".ico")
 }
 
+GotoDesktopNumberAndActivateWindow(newWindowsIndex) {
+    currentWindowsIndex := GetDesktopIndex()
+    ;尝试记录当前桌面的最后激活窗口ID
+    If(WinExist("A")) {
+      currentWindowsArray[currentWindowsIndex + 1] := WinGetID("A")
+    }
+    else{
+      currentWindowsArray[currentWindowsIndex + 1] := 0
+    }
+    GotoDesktopNumber(newWindowsIndex)
+    ;尝试激活新桌面的最后激活窗口
+    currentWindowsID := currentWindowsArray[newWindowsIndex + 1]
+    if (WinExist(currentWindowsID)) {
+        WinActivate("ahk_id " . currentWindowsID)
+    }
+}
+
 ;=====================================================================o
 ;                         系统设置                                     |
 ;=====================================================================o
 
-;切换虚拟桌面
+#i::
+{
+  global currentWindowsArray
+  currentWindowsIndex := GetDesktopIndex()
+  currentWindowsArray[currentWindowsIndex + 1] := WinGetID("A")
+  MsgBox(currentWindowsArray[currentWindowsIndex +1])
+}
 
-#1::GotoDesktopNumber(0)
-#2::GotoDesktopNumber(1)
-#3::GotoDesktopNumber(2)
-#4::GotoDesktopNumber(3)
-#5::GotoDesktopNumber(4)
-#6::GotoDesktopNumber(5)
-#7::GotoDesktopNumber(6)
-#8::GotoDesktopNumber(7)
-#9::GotoDesktopNumber(8)
+;切换虚拟桌面(需要自己提前在win+tab中创建虚拟桌面)
+
+#1::GotoDesktopNumberAndActivateWindow(0)
+#2::GotoDesktopNumberAndActivateWindow(1)
+#3::GotoDesktopNumberAndActivateWindow(2)
+#4::GotoDesktopNumberAndActivateWindow(3)
+#5::GotoDesktopNumberAndActivateWindow(4)
+#6::GotoDesktopNumberAndActivateWindow(5)
+#7::GotoDesktopNumberAndActivateWindow(6)
+#8::GotoDesktopNumberAndActivateWindow(7)
+#9::GotoDesktopNumberAndActivateWindow(8)
+#0::GotoDesktopNumberAndActivateWindow(9)
 
 #+1::MoveCurrentWindowToDesktop(0)
 #+2::MoveCurrentWindowToDesktop(1)
@@ -242,6 +286,7 @@ OnChangeDesktop(wParam, lParam, msg, hwnd) {
 #+7::MoveCurrentWindowToDesktop(6)
 #+8::MoveCurrentWindowToDesktop(7)
 #+9::MoveCurrentWindowToDesktop(8)
+#+0::MoveCurrentWindowToDesktop(9)
 
 ;新建空白markdown文档
 ^+m::
