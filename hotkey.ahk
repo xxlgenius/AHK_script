@@ -256,14 +256,6 @@ GotoDesktopNumberAndActivateWindow(newWindowsIndex) {
 ;                         系统设置                                     |
 ;=====================================================================o
 
-#i::
-{
-  global currentWindowsArray
-  currentWindowsIndex := GetDesktopIndex()
-  currentWindowsArray[currentWindowsIndex + 1] := WinGetID("A")
-  MsgBox(currentWindowsArray[currentWindowsIndex +1])
-}
-
 ;切换虚拟桌面(需要自己提前在win+tab中创建虚拟桌面)
 
 #1::GotoDesktopNumberAndActivateWindow(0)
