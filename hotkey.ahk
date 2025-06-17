@@ -3,7 +3,19 @@
 ;=====================================================================o
 ;                         全局函数&变量                                     |
 ;=====================================================================o
-
+; 该脚本需要管理员权限运行
+full_command_line := DllCall("GetCommandLine", "str")
+if not (A_IsAdmin or RegExMatch(full_command_line, " /restart(?!\S)"))
+{
+    try
+    {
+        if A_IsCompiled
+            Run '*RunAs "' A_ScriptFullPath '" /restart'
+        else
+            Run '*RunAs "' A_AhkPath '" /restart "' A_ScriptFullPath '"'
+    }
+    ExitApp
+}
 ;全局变量并初始化
 
 ; 定长数组，记录所有桌面最后激活窗口的ID,数组长度为10，最多支持10个桌面
